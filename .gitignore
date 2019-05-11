@@ -4,3 +4,5 @@ RedBot/core/
 .vscode/
 __pycache__/
 PattBot
+RedBot/cogs/*/settings.json
+RedBot/cogs/emojis/*
