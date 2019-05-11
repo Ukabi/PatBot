@@ -17,13 +17,12 @@ class Rolegive(cmd.Cog):
 
         self.config.register_guild(**default)
     
-    async def check_message(self, reaction: Reaction):
+    async def check_message(self, reaction: Reaction, member: Member):
         message = await self.config.guild(reaction.message.guild).message()
-        return (reaction.message.id is message and
-                not reaction.me)
+        return (reaction.message.id == message and member.id != self.bot.id)
 
     async def edit_role_list(self, reaction: Reaction, member: Member, change_type):
-        if await self.check_message(reaction):
+        if await self.check_message(reaction, member):
             associations = await self.config.guild(member.guild).associations()
             match = [asso for asso in associations if asso[0] == str(reaction.emoji)]
 
@@ -293,7 +292,6 @@ class Rolegive(cmd.Cog):
         associations = await self.config.guild(ctx.guild).associations()
 
         async def aux(emoji, role):
-            print(await EmojiConverter().convert_(ctx, emoji))
             return "{} - {}".format(
                 await EmojiConverter().convert_(ctx, emoji),
                 await RoleConverter().convert_(ctx, str(role))

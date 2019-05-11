@@ -96,9 +96,8 @@ class Welcome(cmd.Cog):
 
         text  = await self.config.guild(guild).message()
         title = await self.config.guild(guild).title()
-        channel = member.guild.get_channel(
-            await self.config.guild(guild).channel()
-        )
+        channel = await self.config.guild(guild).channel()
+        channel = member.guild.get_channel(channel)
 
         embed = Embed(
             title=title.format(member),
