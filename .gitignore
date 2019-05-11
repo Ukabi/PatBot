@@ -1,0 +1,5 @@
+venv/
+!venv/lib/python3.7/site-package/utils/
+RedBot/core/
+.vscode/
+__pycache__/
