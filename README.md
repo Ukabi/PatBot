@@ -6,7 +6,8 @@
 
 # Overview
 
-Patter-Cogs is an cog pack extension of the original [Red-DiscordBot project](https://github.com/Cog-Creators/Red-DiscordBot), which is a fully modular Discord bot. It provides some basic or utility independant modules which can be useful in any Discord server.
+Patter-Cogs is a cog pack extension of the original [Red-DiscordBot project](https://github.com/Cog-Creators/Red-DiscordBot), which is a fully modular Discord bot.
+It provides some basic or utility independant modules which can be useful in any Discord server.
 
 # Requirements
 
