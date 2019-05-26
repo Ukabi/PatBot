@@ -129,6 +129,7 @@ class Birthday(cmd.Cog):
     
     @birthday_group.command(name='remove')
     async def birthday_remove(self, ctx: cmd.Context):
+        """ : Removes date from birthdays list."""
         birthdays = await self.config.guild(ctx.guild).birthdays()
 
         index = [member['id'] for member in birthdays].index(ctx.author.id)
@@ -143,10 +144,30 @@ class Birthday(cmd.Cog):
         )
         await ctx.send(embed=embed)
     
+    @cmd.admin()
     @birthday_group.command(name='show')
     async def birthday_show(self, ctx: cmd.Context):
-        pass
-    
+        """ : Shows birthdays list."""
+        bdays = await self.config.guild(ctx.guild).birthdays()
+
+        bdays = [
+            (
+                "{.name}".format(ctx.guild.get_member(user.pop('id'))),
+                "/".join([str(d) for d in user.pop('date')]),
+                ["❌", "✅"][user.pop('present')]
+            ) for user in bdays
+        ]
+
+        message = "\n".join([" - ".join(info) for info in bdays])
+
+        embed = Embed(
+            title='Birthday list',
+            color=COLOR,
+            description=message
+        )
+
+        await ctx.send(embed=embed)
+
     async def on_member_join(self, member: Member):
         await self.edit_presence(member, True)
     
@@ -162,6 +183,7 @@ class Birthday(cmd.Cog):
                 await self.config.guild(member.guild).birthdays.set(birthdays)
                 break
 
+
     @cmd.is_owner()
     @cmd.group(name='scheduler')
     async def scheduler_group(self, ctx: cmd.Context):
@@ -170,6 +192,7 @@ class Birthday(cmd.Cog):
     @cmd.is_owner()
     @scheduler_group.command(name='start')
     async def scheduler_start(self, ctx: cmd.Context):
+        """ : Starts scheduler. One update every minute."""
         if self.timer is not None:
             embed = Embed(
                 title='Error',
@@ -189,6 +212,7 @@ class Birthday(cmd.Cog):
     @cmd.is_owner()
     @scheduler_group.command(name='stop')
     async def scheduler_stop(self, ctx: cmd.Context):
+        """ : Stops scheduler."""
         if self.timer is None:
             embed = Embed(
                 title='Error',
