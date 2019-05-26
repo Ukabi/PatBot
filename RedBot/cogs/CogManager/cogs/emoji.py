@@ -45,7 +45,7 @@ class Emoji(cmd.Cog):
 
             passed = False
             if file_path.startswith("http"):
-                req = requests.get(file_path)
+                req = rq.get(file_path)
                 if req.ok:
                     b = bytearray(req.content)
                     passed = True
@@ -62,7 +62,7 @@ class Emoji(cmd.Cog):
             
             if passed:
                 message = "Confirm emote add?\nReply with y/n."
-                f = File(b)
+                f = File(b, filename="emoji_template.png")
 
                 answer = await ask_confirm(bot=self.bot, ctx=ctx,
                                            pic=f, conf_mess=message)

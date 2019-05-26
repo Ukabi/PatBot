@@ -245,7 +245,7 @@ class Rolegive(cmd.Cog):
     @rolegive_group.command(name='reset')
     async def rolegive_reset(self, ctx: cmd.Context):
         """: resets the associations list."""
-        message = "Write y/n to confirm removal."
+        message = "Write y/n to confirm reset."
 
         answer = await ask_confirm(bot=self.bot, ctx=ctx, conf_mess=message)
 
