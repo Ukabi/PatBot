@@ -36,8 +36,7 @@ class Birthday(cmd.Cog):
     @cmd.admin()
     @birthday_group.command(name='channel')
     async def birthday_channel(self, ctx: cmd.Context, *, channel: str):
-        """
-        **[#channel or channel name]** : 
+        """**[#channel or channel name]** : 
         sets the channel where to send birthday notifications.
         """
         channel = await TextChannelConverter().convert_(ctx, channel)
