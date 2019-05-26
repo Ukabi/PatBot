@@ -29,13 +29,6 @@ class Birthday(cmd.Cog):
         if self.timer is not None:
             self.timer = None
 
-    @cmd.command(name='starttimer')
-    async def start_scheduler(self):
-        self.timer = RepeatedTimer(5, await self.test)
-    
-    async def test(self):
-        print(1)
-
     @cmd.group(name='birthday')
     async def birthday_group(self, ctx: cmd.Context):
         pass
@@ -150,6 +143,10 @@ class Birthday(cmd.Cog):
         )
         await ctx.send(embed=embed)
     
+    @birthday_group.command(name='show')
+    async def birthday_show(self, ctx: cmd.Context):
+        pass
+    
     async def on_member_join(self, member: Member):
         await self.edit_presence(member, True)
     
@@ -164,10 +161,6 @@ class Birthday(cmd.Cog):
                 member['present'] = presence_type
                 await self.config.guild(member.guild).birthdays.set(birthdays)
                 break
-    
-    @birthday_group.command(name='show')
-    async def birthday_show(self, ctx: cmd.Context):
-        pass
 
     @cmd.is_owner()
     @cmd.group(name='scheduler')
@@ -215,9 +208,7 @@ class Birthday(cmd.Cog):
     async def check_day_update(self):
         d1 = await self.config.date()
         d2 = dt.now().day
-        print(d1, d2)
         if d1 != d2:
-            print("Passed!")
             await self.config.date.set(d2)
             await self.send_birthday_notif()
 
@@ -234,18 +225,16 @@ class Birthday(cmd.Cog):
 
 
             date = (dt.now().day, dt.now().month)
-            print(date, birthdays)
 
-            birthdays = [user['id'] for user in birthdays if user['present'] and date == user['date']]
+            birthdays = [
+                user['id'] for user in birthdays if user['present']\
+                                                    and date == user['date']
+            ]
             for user in birthdays:
                 user = guild.get_member(user)
                 message = ":tada: Happy birthday {.mention}!!! :cake:".format(user)
 
                 await channel.send(message)
-
-    @cmd.command(name='test')
-    async def a_test(self, ctx):
-        await self.send_birthday_notif()
 
 def setup(bot):
     bot.add_cog(Birthday(bot))
