@@ -5,7 +5,7 @@ from periodic import Periodic
 from datetime import datetime as dt
 from datetime import timedelta as td
 import time
-from utils.imports import TextChannelConverter, COLOR, RepeatedTimer
+from utils.imports import TextChannelConverter, COLOR
 
 class Birthday(cmd.Cog):
     def __init__(self, bot):
@@ -101,10 +101,11 @@ class Birthday(cmd.Cog):
         
         else:
             birthdays = await self.config.guild(ctx.guild).birthdays()
+            date_ = (date.tm_mday, date.tm_mon)
 
             member = {
                 'id': ctx.author.id,
-                'date': tuple(date.tm_mday, date.tm_mon),
+                'date': tuple(date_),
                 'present': True
             }
 
