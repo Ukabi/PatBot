@@ -1,7 +1,7 @@
 from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Reaction, Member, Embed, Emoji
-from utils.imports import EmojiConverter, RoleConverter, COLOR
+from utils.imports import EmojiConverter, RoleConverter, COLOR, ask_confirm
 
 
 class Rolegive(cmd.Cog):
@@ -245,25 +245,11 @@ class Rolegive(cmd.Cog):
     @rolegive_group.command(name='reset')
     async def rolegive_reset(self, ctx: cmd.Context):
         """: resets the associations list."""
-        embed = Embed(
-            title= "Confirm?",
-            color= COLOR,
-            description= "Write y/n to confirm removal."
-        )
+        message = "Write y/n to confirm removal."
 
-        await ctx.send(embed= embed)
+        answer = await ask_confirm(bot=self.bot, ctx=ctx, conf_mess=message)
 
-        def check(m):
-            if m.channel != ctx.channel or m.author != ctx.message.author:
-                return False
-            elif m.content.lower()[0] not in "yn":
-                return False
-            else:
-                return True
-        
-        confirm = await self.bot.wait_for('message', check=check)
-
-        if confirm.content.lower().startswith("y"):
+        if answer:
             await self.config.guild(ctx.guild).associations.set(list())
             embed = Embed(
                 title="Reset.",

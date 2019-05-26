@@ -1,7 +1,8 @@
 from redbot.core import commands as cmd
-from discord import Embed
+from discord import Embed, File
 from pathlib import Path
-from utils.imports import EmojiConverter, RoleConverter, COLOR
+from utils.imports import EmojiConverter, RoleConverter, COLOR, ask_confirm
+import requests as rq
 
 class Emoji(cmd.Cog):
     def __init__(self, bot):
@@ -16,11 +17,18 @@ class Emoji(cmd.Cog):
 
     @cmd.admin()
     @emoji_group.command(name='add')
-    async def emoji_add(self, ctx: cmd.Context, name: str, file_path: str, *roles):
+    async def emoji_add(self, ctx: cmd.Context, file_path: str, name: str, *roles):
         """
-        **[name] [file] [roles]** : adds an emoji to the server,
+        **[file] [name] [roles]** : adds an emoji to the server,
         if roles, restricts it for precised roles.
         """
+        def send_error():
+            return Embed(
+                title="Error",
+                color=COLOR,
+                description="File not found."
+            )
+
         roles = [await RoleConverter().convert_(ctx, role) for role in roles]
 
         if None in roles:
@@ -29,60 +37,67 @@ class Emoji(cmd.Cog):
                 color=COLOR,
                 description="One of the precised roles wasn't found."
             )
-        else:
-            try:
-                with open(self.emoji_path + file_path, 'rb') as image:
-                    b = bytearray(image.read())
-                
-                emoji = await ctx.guild.create_custom_emoji(name=name,
-                                                            image=b,
-                                                            roles=roles)
-                
-                affected_roles = ", ".join(
-                    [str(role) for role in roles]
-                ) if roles else "everyone"
 
-                embed = Embed(
-                    title="Successfully created {} emoji.".format(str(emoji)),
-                    color=COLOR,
-                    description="Affected roles: {}.".format(affected_roles)
-                )
-                
-            except FileNotFoundError:
-                embed = Embed(
-                    title="Error",
-                    color=COLOR,
-                    description="Wrong file given."
-                )
-        
+        else:
+            affected_roles = ", ".join(
+                [str(role) for role in roles]
+            ) if roles else "everyone"
+
+            passed = False
+            if file_path.startswith("http"):
+                req = requests.get(file_path)
+                if req.ok:
+                    b = bytearray(req.content)
+                    passed = True
+                else:
+                    embed = send_error()
+            else:
+                try:
+                    with open(self.emoji_path + file_path, 'rb') as image:
+                        b = bytearray(image.read())
+                    passed = True
+                    
+                except FileNotFoundError:
+                    embed = send_error()
+            
+            if passed:
+                message = "Confirm emote add?\nReply with y/n."
+                f = File(b)
+
+                answer = await ask_confirm(bot=self.bot, ctx=ctx,
+                                           pic=f, conf_mess=message)
+
+                if answer:
+                    emoji = await ctx.guild.create_custom_emoji(name=name,
+                                                                image=b,
+                                                                roles=roles)
+                    embed = Embed(
+                        title="Successfully created {} emoji.".format(str(emoji)),
+                        color=COLOR,
+                        description="Affected roles: {}.".format(affected_roles)
+                    )
+                else:
+                    embed = Embed(
+                        title="Cancelled",
+                        color=COLOR,
+                        description="Emote adding process cancelled."
+                    )
+            else:
+                embed = send_error()
+
         await ctx.send(embed=embed)
-    
+
     @cmd.admin()
     @emoji_group.command(name='remove')
     async def emoji_remove(self, ctx: cmd.Context, emoji):
         """**[emoji]** : removes emoji from server."""
         emoji = await EmojiConverter().convert_(ctx, emoji)
         
-        embed = Embed(
-            title="Confirm?",
-            color=COLOR,
-            description="Affected emoji: {}\n"
-                        "Write y/n to confirm removal.".format(emoji)
-        )
-
-        await ctx.send(embed=embed)
-
-        def check(m):
-            if m.channel != ctx.channel or m.author != ctx.message.author:
-                return False
-            elif m.content.lower()[0] not in "yn":
-                return False
-            else:
-                return True
+        message = "Affected emoji: {}\nWrite y/n to confirm removal.".format(emoji)
         
-        confirm = await self.bot.wait_for('message', check=check)
+        answer = await ask_confirm(bot=self.bot, ctx=ctx, conf_mess=message)
 
-        if confirm.content.lower().startswith("y"):
+        if answer:
             await emoji.delete()
             embed = Embed(
                 title="Reset.",
