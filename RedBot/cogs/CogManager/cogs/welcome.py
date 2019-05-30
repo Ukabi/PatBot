@@ -2,6 +2,7 @@ from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Member, Embed
 from utils.imports import TextChannelConverter, COLOR
+from utils.changesettings import change_data, change_channel
 
 
 class Welcome(cmd.Cog):
@@ -24,7 +25,7 @@ class Welcome(cmd.Cog):
     @welcome_group.command(name='message')
     async def welcome_message(self, ctx: cmd.Context, *, text):
         """**[text]** : edits the welcome message's text."""
-        await self.change_message(
+        await change_data(
             ctx,
             text,
             self.config.guild(ctx.guild).message
@@ -34,7 +35,7 @@ class Welcome(cmd.Cog):
     @welcome_group.command(name='title')
     async def welcome_title(self, ctx: cmd.Context, *, text):
         """**[text]** : edits the welcome message's title."""
-        await self.change_message(
+        await change_data(
             ctx,
             text,
             self.config.guild(ctx.guild).title
@@ -46,50 +47,11 @@ class Welcome(cmd.Cog):
         """**[#channel or channel name]** : 
         sets the channel where to send messages.
         """
-        channel = await TextChannelConverter().convert_(ctx, channel)
-
-        if channel is None:
-            embed = Embed(
-                title="Error",
-                color=COLOR,
-                description="Channel reference not found."
-            )
-        else:
-            await self.config.guild(ctx.guild).channel.set(channel.id)
-            embed = Embed(
-                title="Channel changed",
-                color=COLOR,
-                description=str(channel)
-            )
-
-        await ctx.send(embed=embed)
-
-    async def change_message(self, ctx: cmd.Context, text, change_type):
-        text = text.replace("\\n", "\n")
-
-        try:
-            embed = Embed(
-                title="Message changed - example:",
-                color=COLOR,
-                description=text.format(ctx.author)
-            )
-            await change_type.set(text)
-
-        except AttributeError:
-            embed = Embed(
-                title="Error",
-                color=COLOR,
-                description="Wrong attribute."
-            )
-        except IndexError:
-            embed = Embed(
-                title="Error",
-                color=COLOR,
-                description="Wrong format."
-            )
-
-        finally:
-            await ctx.send(embed=embed)
+        await change_channel(
+            ctx,
+            channel,
+            self.config.guild(ctx.guild).channel
+        )
     
     async def on_member_join(self, member: Member):
         guild = member.guild

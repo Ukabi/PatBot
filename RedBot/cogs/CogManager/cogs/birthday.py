@@ -5,6 +5,7 @@ from periodic import Periodic
 from datetime import datetime as dt
 from datetime import timedelta as td
 import time
+import numpy as np
 from utils.imports import TextChannelConverter, COLOR
 
 class Birthday(cmd.Cog):
@@ -114,6 +115,15 @@ class Birthday(cmd.Cog):
                 birthdays[index] = member
             except ValueError:
                 birthdays.append(member)
+            except:
+                embed = send_error()
+            
+            to_sort = [list(member['date']) for member in birthdays]
+            to_sort.reverse()
+            order = np.lexsort(
+                [member['date'] for member in to_sort]
+            )
+            birthdays = [birthdays[i] for i in order]
 
             await self.config.guild(ctx.guild).birthdays.set(birthdays)
 
