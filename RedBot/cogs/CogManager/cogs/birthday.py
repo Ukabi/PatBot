@@ -119,10 +119,8 @@ class Birthday(cmd.Cog):
                 embed = send_error()
             
             to_sort = [list(member['date']) for member in birthdays]
-            to_sort.reverse()
-            order = np.lexsort(
-                [member['date'] for member in to_sort]
-            )
+            to_sort = [list(date) for date in zip(*to_sort)]
+            order = np.lexsort(to_sort)
             birthdays = [birthdays[i] for i in order]
 
             await self.config.guild(ctx.guild).birthdays.set(birthdays)
