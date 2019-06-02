@@ -11,6 +11,7 @@ class Emoji(cmd.Cog):
             Path(__file__).parent.parent.parent.absolute()
         )
     
+    @cmd.mod()
     @cmd.group(name='emoji')
     async def emoji_group(self, ctx: cmd.Context):
         pass
@@ -19,7 +20,7 @@ class Emoji(cmd.Cog):
     @emoji_group.command(name='add')
     async def emoji_add(self, ctx: cmd.Context, file_path: str, name: str, *roles):
         """
-        **[file] [name] [roles]** : adds an emoji to the server,
+        **[file] [name] (roles)** : adds an emoji to the server,
         if roles, restricts it for precised roles.
         """
         def send_error():

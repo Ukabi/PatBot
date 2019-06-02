@@ -7,6 +7,7 @@ from datetime import timedelta as td
 import time
 import numpy as np
 from utils.imports import TextChannelConverter, COLOR
+from utils.changesettings import change_channel
 
 class Birthday(cmd.Cog):
     def __init__(self, bot):
@@ -40,23 +41,11 @@ class Birthday(cmd.Cog):
         """**[#channel or channel name]** : 
         sets the channel where to send birthday notifications.
         """
-        channel = await TextChannelConverter().convert_(ctx, channel)
-
-        if channel is None:
-            embed = Embed(
-                title="Error",
-                color=COLOR,
-                description="Channel reference not found."
-            )
-        else:
-            embed = Embed(
-                title="Birthday channel changed",
-                color=COLOR,
-                description="New channel: <#{}>".format(channel.id)
-            )
-            await self.config.guild(ctx.guild).channel.set(channel.id)
-        
-        await ctx.send(embed=embed)
+        await change_channel(
+            ctx,
+            channel,
+            self.config.guild(ctx.guild).channel
+        )
     
     @birthday_group.command(name='set')
     async def birthday_set(self, ctx: cmd.Context, *, date: str):

@@ -1,7 +1,8 @@
 from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Reaction, Member, Embed, Emoji
-from utils.imports import EmojiConverter, RoleConverter, COLOR, ask_confirm
+from utils.imports import EmojiConverter, RoleConverter, COLOR
+from utils.askconfirm import ask_reset
 
 
 class Rolegive(cmd.Cog):
@@ -56,6 +57,7 @@ class Rolegive(cmd.Cog):
     async def on_reaction_remove(self, reaction: Reaction, member: Member):
         await self.edit_role_list(reaction, member, 'r')
 
+    @cmd.mod()
     @cmd.group(name='rolegive')
     async def rolegive_group(self, ctx: cmd.Context):
         pass
@@ -245,25 +247,13 @@ class Rolegive(cmd.Cog):
     @rolegive_group.command(name='reset')
     async def rolegive_reset(self, ctx: cmd.Context):
         """: resets the associations list."""
-        message = "Write y/n to confirm reset."
-
-        answer = await ask_confirm(bot=self.bot, ctx=ctx, conf_mess=message)
-
-        if answer:
-            await self.config.guild(ctx.guild).associations.set(list())
-            embed = Embed(
-                title="Reset.",
-                color=COLOR,
-                description="Association list has been reset."
-            )
-        else:
-            embed = Embed(
-                title="Cancelled",
-                color=COLOR,
-                description="Reset cancelled."
-            )
-        
-        await ctx.send(embed=embed)
+        await ask_reset(
+            bot=self.bot,
+            ctx=ctx,
+            res_func=self.config.guild(ctx.guild).associations.clear,
+            obj="Association list",
+            message="Write y/n to confirm reset.",
+        )
 
     async def import_rolegive_data(self, ctx: cmd.Context, emoji: str, role: str):
         emoji = await EmojiConverter().convert_(ctx, emoji)

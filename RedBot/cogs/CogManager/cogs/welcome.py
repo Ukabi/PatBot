@@ -17,6 +17,7 @@ class Welcome(cmd.Cog):
 
         self.config.register_guild(**default)
     
+    @cmd.admin()
     @cmd.group(name='welcome')
     async def welcome_group(self, ctx: cmd.Context):
         pass

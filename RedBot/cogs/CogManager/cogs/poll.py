@@ -14,6 +14,7 @@ class Poll(cmd.Cog):
 
         self.config.register_guild(**default)
     
+    @cmd.admin()
     @cmd.group(name='poll')
     async def poll_group(self, ctx: cmd.Context):
         pass
