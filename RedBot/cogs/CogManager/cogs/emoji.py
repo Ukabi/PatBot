@@ -1,8 +1,10 @@
 from redbot.core import commands as cmd
 from discord import Embed, File
 from pathlib import Path
-from utils.imports import EmojiConverter, RoleConverter, COLOR, ask_confirm
+from utils.imports import EmojiConverter, RoleConverter, COLOR
+from utils.askconfirm import ask_confirm
 import requests as rq
+import io
 
 class Emoji(cmd.Cog):
     def __init__(self, bot):
@@ -49,13 +51,16 @@ class Emoji(cmd.Cog):
                 req = rq.get(file_path)
                 if req.ok:
                     b = bytearray(req.content)
+                    f = io.BytesIO(bytes(req.content))
                     passed = True
                 else:
                     embed = send_error()
             else:
                 try:
                     with open(self.emoji_path + file_path, 'rb') as image:
-                        b = bytearray(image.read())
+                        i = image.read()
+                        b = bytearray((i))
+                        f = io.BytesIO(bytes(i))
                     passed = True
                     
                 except FileNotFoundError:
@@ -63,7 +68,8 @@ class Emoji(cmd.Cog):
             
             if passed:
                 message = "Confirm emote add?\nReply with y/n."
-                f = File(b, filename="emoji_template.png")
+                
+                f = File(f, filename="emoji_template.png")
 
                 answer = await ask_confirm(bot=self.bot, ctx=ctx,
                                            pic=f, conf_mess=message)

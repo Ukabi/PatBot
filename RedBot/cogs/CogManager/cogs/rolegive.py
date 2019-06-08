@@ -50,10 +50,11 @@ class Rolegive(cmd.Cog):
                     "{} not in assosiation list.".format(str(reaction.emoji))
                 )
 
-
+    @cmd.Cog.listener()
     async def on_reaction_add(self, reaction: Reaction, member: Member):
         await self.edit_role_list(reaction, member, 'a')
 
+    @cmd.Cog.listener()
     async def on_reaction_remove(self, reaction: Reaction, member: Member):
         await self.edit_role_list(reaction, member, 'r')
 

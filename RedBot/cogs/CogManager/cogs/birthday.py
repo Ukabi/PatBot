@@ -165,9 +165,11 @@ class Birthday(cmd.Cog):
 
         await ctx.send(embed=embed)
 
+    @cmd.Cog.listener()
     async def on_member_join(self, member: Member):
         await self.edit_presence(member, True)
     
+    @cmd.Cog.listener()
     async def on_member_leave(self, member: Member):
         await self.edit_presence(member, False)
     

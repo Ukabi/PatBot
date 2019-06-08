@@ -54,6 +54,7 @@ class Welcome(cmd.Cog):
             self.config.guild(ctx.guild).channel
         )
     
+    @cmd.Cog.listener()
     async def on_member_join(self, member: Member):
         guild = member.guild
 

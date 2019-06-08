@@ -216,7 +216,9 @@ class EmojiData(cmd.Cog):
 
         await ctx.send(embed=embed)
     
-    async def on_message(self, message: Message):
+    @cmd.Cog.listener()
+    async def on_message_without_command(self, message: Message):
+        print(1)
         content = message.content
 
         emotes = self.reg_cut.findall(content)
@@ -231,6 +233,7 @@ class EmojiData(cmd.Cog):
             keys
         )
 
+    @cmd.Cog.listener()
     async def on_reaction_add(self, reaction: Reaction, member: Member):
         emoji = reaction.emoji
 
@@ -248,40 +251,19 @@ class EmojiData(cmd.Cog):
     
     async def add_emoji_to_data(self, guild: Guild, member: Member, keys: list):
         guild_conf = self.config.guild(guild)
-        try:
-            member_conf = self.config.member(member)
+        member_conf = self.config.member(member)
 
-            treat = [
-                [None, await guild_conf.data()][await guild_conf.enabled_guild()],
-                [None, await member_conf.data()][await guild_conf.enabled_members()]
-            ]
-            
-            for n, val in enumerate(treat):
-                if val is not None:
-                    for key in keys:
-                        count = val.get(key, 0) + 1
-                        val[key] = count
-                    await [guild_conf, member_conf][n].data.set(val)
-        except:
-            pass
-    
-    @cmd.admin()
-    @cmd.command(name='purge')
-    async def test_purge(self, ctx: cmd.Context, channel: str):
-        channel = await TextChannelConverter().convert_(ctx, channel)
-        if channel is not None:
-            answer = ask_confirm(
-                ctx=ctx,
-                bot=self.bot,
-                conf_mess="You sure?"
-            )
-            if answer:
-                await channel.purge(limit=4)
-                await ctx.send("Purged.")
-            else:
-                await ctx.send("Cancelled.")
-        else:
-            await ctx.send("Channel not found.")
+        treat = [
+            [None, await guild_conf.data()][await guild_conf.enabled_guild()],
+            [None, await member_conf.data()][await guild_conf.enabled_members()]
+        ]
+        
+        for n, val in enumerate(treat):
+            if val is not None:
+                for key in keys:
+                    count = val.get(key, 0) + 1
+                    val[key] = count
+                await [guild_conf, member_conf][n].data.set(val)
 
 
 def setup(bot):
