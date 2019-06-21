@@ -1,23 +1,28 @@
 from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Embed, Member
+from discord.ext import tasks
 from periodic import Periodic
 from datetime import datetime as dt
 from datetime import timedelta as td
 import time
 import numpy as np
-from utils.imports import TextChannelConverter, COLOR
-from utils.changesettings import change_channel
+from utils.imports import TextChannelConverter, MemberConverter
+from utils.imports import COLOR, MONTHS, DATE_FORMATS
+from utils.changesettings import change_reference
 
 class Birthday(cmd.Cog):
     def __init__(self, bot):
         self.config = Cfg.get_conf(self, 669)
-        self.timer = None
         self.bot = bot
+
+        self.scheduler.start()
+        print("BIRTHDAY_COG: Scheduler started.")
 
         default = {
             "birthdays": list(),
-            "channel": 0
+            "channel": 0,
+            "role": 0
         }
 
         default_global = {
@@ -27,9 +32,56 @@ class Birthday(cmd.Cog):
         self.config.register_guild(**default)
         self.config.register_global(**default_global)
     
-    def __unload(self):
-        if self.timer is not None:
-            self.timer = None
+    def cog_unload(self):
+        self.scheduler.cancel()
+        print("BIRTHDAY_COG: Scheduler stopped.")
+
+    @scheduler.before_loop
+    async def before_scheduler(self):
+        await self.bot.wait_until_ready()
+    
+    @tasks.loop(minutes=1)
+    async def scheduler(self):
+
+        d1 = await self.config.date()
+        d2 = dt.now().day
+        if d1 != d2:
+            print("BIRTHDAY_COG: New day !")
+            await self.config.date.set(d2)
+            await self.update_birthday()
+
+    async def update_birthday(self):
+        guilds = await self.config.all_guilds()
+
+        for guild in guilds.keys():
+            guild_data = guilds[guild]
+
+            guild = self.bot.get_guild(guild)
+
+            birthdays = guild_data['birthdays']
+            channel = guild.get_channel(guild_data['channel'])
+            role = guild.get_role(guild_data['role'])
+
+            date = (dt.now().day, dt.now().month)
+
+            birthdays = [
+                user['id'] for user in birthdays if user['present']\
+                                                    and date == user['date']
+            ]
+
+            for user in birthdays:
+                user = guild.get_member(user)
+                message = ":tada: Happy birthday {.mention}!!! :cake:".format(user)
+
+                await channel.send(message)
+            
+            if role:
+                for member in guild.members:
+                    roles = member.roles
+                    if member.id in birthdays and role not in roles:
+                        member.add_roles(role)
+                    elif member.id not in birthdays and role in roles:
+                        member.remove_roles(role)
 
     @cmd.group(name='birthday')
     async def birthday_group(self, ctx: cmd.Context):
@@ -41,10 +93,24 @@ class Birthday(cmd.Cog):
         """**[#channel or channel name]** : 
         sets the channel where to send birthday notifications.
         """
-        await change_channel(
+        await change_reference(
             ctx,
             channel,
-            self.config.guild(ctx.guild).channel
+            self.config.guild(ctx.guild).channel,
+            "Channel"
+        )
+
+    @cmd.admin()
+    @birthday_group.command(name='role')
+    async def birthday_role(self, ctx: cmd.Context, *, role: str):
+        """**[@role or role name]** : 
+        sets the role to give during birthday.
+        """
+        await change_reference(
+            ctx,
+            role,
+            self.config.guild(ctx.guild).role,
+            "Role"
         )
     
     @birthday_group.command(name='set')
@@ -62,20 +128,9 @@ class Birthday(cmd.Cog):
                             "`dd/mm`, `dd.mm`, `d month`, `month d`."
             )
 
-        possible_formats = [
-            '%d-%m', '%d.%m', '%d/%m',
-            '%d %b', '%d %B', '%dth %b', '%dth %B',
-            '%b %d', '%B %d', '%b %dth', '%B %dth'
-        ]
-        months = [
-            "Jan", "Feb", "Mar", "Apr",
-            "May", "Jun", "Jul", "Aug",
-            "Sep", "Oct", "Nov", "Dec"
-        ]
-
         passed = False
 
-        for form in possible_formats:
+        for form in DATE_FORMATS:
             try:
                 date = time.strptime(date, form)
                 if date:
@@ -119,9 +174,10 @@ class Birthday(cmd.Cog):
                 color=COLOR,
                 description='Birthday set to {} {}'.format(
                     date.tm_mday,
-                    months[date.tm_mon - 1]
+                    MONTHS[date.tm_mon - 1]
                 )
             )
+
         await ctx.send(embed=embed)
     
     @birthday_group.command(name='remove')
@@ -139,11 +195,12 @@ class Birthday(cmd.Cog):
             color=COLOR,
             description='Birthday remove from list.'
         )
+
         await ctx.send(embed=embed)
     
     @cmd.admin()
-    @birthday_group.command(name='show')
-    async def birthday_show(self, ctx: cmd.Context):
+    @birthday_group.command(name='list')
+    async def birthday_list(self, ctx: cmd.Context):
         """ : Shows birthdays list."""
         bdays = await self.config.guild(ctx.guild).birthdays()
 
@@ -158,7 +215,7 @@ class Birthday(cmd.Cog):
         message = "\n".join([" - ".join(info) for info in bdays])
 
         embed = Embed(
-            title='Birthday list',
+            title='Birthdays list',
             color=COLOR,
             description=message
         )
@@ -181,83 +238,6 @@ class Birthday(cmd.Cog):
                 member['present'] = presence_type
                 await self.config.guild(member.guild).birthdays.set(birthdays)
                 break
-
-
-    @cmd.is_owner()
-    @cmd.group(name='scheduler')
-    async def scheduler_group(self, ctx: cmd.Context):
-        pass
-    
-    @cmd.is_owner()
-    @scheduler_group.command(name='start')
-    async def scheduler_start(self, ctx: cmd.Context):
-        """ : Starts scheduler. One update every minute."""
-        if self.timer is not None:
-            embed = Embed(
-                title='Error',
-                color=COLOR,
-                description="Scheduler already started."
-            )
-        else:
-            self.timer = Periodic(60, self.check_day_update)
-            await self.timer.start()
-            embed = Embed(
-                title='Started',
-                color=COLOR,
-                description="Scheduler started."
-            )
-        await ctx.send(embed=embed)
-
-    @cmd.is_owner()
-    @scheduler_group.command(name='stop')
-    async def scheduler_stop(self, ctx: cmd.Context):
-        """ : Stops scheduler."""
-        if self.timer is None:
-            embed = Embed(
-                title='Error',
-                color=COLOR,
-                description="Scheduler not started yet."
-            )
-        else:
-            await self.timer.stop()
-            self.timer = None
-            embed = Embed(
-                title='Stopped',
-                color=COLOR,
-                description="Scheduler stopped."
-            )
-        await ctx.send(embed=embed)
-    
-    async def check_day_update(self):
-        d1 = await self.config.date()
-        d2 = dt.now().day
-        if d1 != d2:
-            await self.config.date.set(d2)
-            await self.send_birthday_notif()
-
-    async def send_birthday_notif(self):
-        guilds = await self.config.all_guilds()
-
-        for guild in guilds.keys():
-            guild_data = guilds[guild]
-
-            guild = self.bot.get_guild(guild)
-
-            birthdays = guild_data['birthdays']
-            channel = guild.get_channel(guild_data['channel'])
-
-
-            date = (dt.now().day, dt.now().month)
-
-            birthdays = [
-                user['id'] for user in birthdays if user['present']\
-                                                    and date == user['date']
-            ]
-            for user in birthdays:
-                user = guild.get_member(user)
-                message = ":tada: Happy birthday {.mention}!!! :cake:".format(user)
-
-                await channel.send(message)
 
 def setup(bot):
     bot.add_cog(Birthday(bot))
