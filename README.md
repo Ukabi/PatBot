@@ -13,7 +13,7 @@ It provides some basic or utility independant modules which can be useful in any
 
 Those libraries are needed to make cogs working correctly (installable via pip):
 - [Red-DiscordBot](https://red-discordbot.readthedocs.io/en/v3-develop/install_windows.html#installing-red)
-- discord
+- discord.py 1.1.1
 - asyncio-periodic
 
 # Installation
@@ -26,11 +26,12 @@ Those libraries are needed to make cogs working correctly (installable via pip):
 # Cogs
 
 The current cogs provided are:
-- Welcome: send a custom welcome message to new member.
-- Poll: Create a multiple choice poll using Discord reactions.
-- Emoji: Import - role-restricted - emojis.
-- Rolegive: Give members roles when reacting to a message.
 - Birthday: Members can give their birthday therefore guild will be notified.
+- Emoji: Import - role-restricted - emojis.
+- EmojiData: Gets the emoji usage and provides statistics for guild or member. 
+- Poll: Create a multiple choice poll using Discord reactions.
+- Rolegive: Give members roles when reacting to a message.
+- Welcome: Send a custom welcome message to new member.
 
 # Support
 
