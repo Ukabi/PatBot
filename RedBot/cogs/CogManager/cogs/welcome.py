@@ -2,7 +2,7 @@ from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Member, Embed
 from utils.imports import TextChannelConverter, COLOR
-from utils.changesettings import change_data, change_channel
+from utils.changesettings import change_data, change_reference
 
 
 class Welcome(cmd.Cog):
@@ -48,10 +48,11 @@ class Welcome(cmd.Cog):
         """**[#channel or channel name]** : 
         sets the channel where to send messages.
         """
-        await change_channel(
+        await change_reference(
             ctx,
             channel,
-            self.config.guild(ctx.guild).channel
+            self.config.guild(ctx.guild).channel,
+            "Channel"
         )
     
     @cmd.Cog.listener()

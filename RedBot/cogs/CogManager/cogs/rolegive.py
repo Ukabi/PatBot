@@ -19,8 +19,11 @@ class Rolegive(cmd.Cog):
         self.config.register_guild(**default)
     
     async def check_message(self, reaction: Reaction, member: Member):
-        message = await self.config.guild(reaction.message.guild).message()
-        return (reaction.message.id == message and member.id != self.bot.id)
+        try:
+            message = await self.config.guild(reaction.message.guild).message()
+            return (reaction.message.id == message and member.id != self.bot.id)
+        except AttributeError:
+            return False
 
     async def edit_role_list(self, reaction: Reaction, member: Member, change_type):
         if await self.check_message(reaction, member):

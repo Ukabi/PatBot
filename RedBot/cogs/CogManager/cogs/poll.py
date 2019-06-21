@@ -2,6 +2,7 @@ from redbot.core import commands as cmd
 from redbot.core import Config as Cfg
 from discord import Message, Embed, TextChannel
 from utils.imports import TextChannelConverter, COLOR
+from utils.changesettings import change_reference
 
 
 class Poll(cmd.Cog):
@@ -83,23 +84,12 @@ class Poll(cmd.Cog):
         **[#channel or channel name]** : 
         sets the channel where to send polls.
         """
-        channel = await TextChannelConverter().convert_(ctx, channel)
-
-        if channel is None:
-            embed = Embed(
-                title="Error",
-                color=COLOR,
-                description="Channel reference not found."
-            )
-        else:
-            embed = Embed(
-                title="Poll channel changed",
-                color=COLOR,
-                description="New channel: <#{}>".format(channel.id)
-            )
-            await self.config.guild(ctx.guild).channel.set(channel.id)
-        
-        await ctx.send(embed=embed)
+        await change_reference(
+            ctx,
+            channel,
+            self.config.guild(ctx.guild).channel,
+            "Channel"
+        )
 
     async def set_first_reactions(self, message: Message, n_prop: int):
         for i in range(1, n_prop + 1):

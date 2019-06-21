@@ -218,20 +218,23 @@ class EmojiData(cmd.Cog):
     
     @cmd.Cog.listener()
     async def on_message_without_command(self, message: Message):
-        content = message.content
+        try:
+            content = message.content
 
-        emotes = self.reg_cut.findall(content)
-        emojis = [[f for f in e if f][0] for e in EMOJI_REG.findall(content)]
+            emotes = self.reg_cut.findall(content)
+            emojis = [[f for f in e if f][0] for e in EMOJI_REG.findall(content)]
 
-        keys = [self.reg_key.search(e).group(0) for e in emotes] + emojis
-        if keys:
-            print(keys)
+            keys = [self.reg_key.search(e).group(0) for e in emotes] + emojis
+            if keys:
+                print(keys)
 
-        await self.add_emoji_to_data(
-            message.guild,
-            message.author,
-            keys
-        )
+            await self.add_emoji_to_data(
+                message.guild,
+                message.author,
+                keys
+            )
+        except AttributeError:
+            pass
 
     @cmd.Cog.listener()
     async def on_reaction_add(self, reaction: Reaction, member: Member):
