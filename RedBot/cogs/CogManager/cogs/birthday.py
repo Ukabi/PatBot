@@ -72,7 +72,7 @@ class Birthday(cmd.Cog):
                 user = guild.get_member(user)
                 message = ":tada: Happy birthday {.mention}!!! :cake:".format(user)
 
-                #await channel.send(message)
+                await channel.send(message)
             
             if role:
                 for member in guild.members:
