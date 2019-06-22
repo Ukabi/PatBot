@@ -35,10 +35,6 @@ class Birthday(cmd.Cog):
     def cog_unload(self):
         self.scheduler.cancel()
         print("BIRTHDAY_COG: Scheduler stopped.")
-
-    @scheduler.before_loop
-    async def before_scheduler(self):
-        await self.bot.wait_until_ready()
     
     @tasks.loop(minutes=1)
     async def scheduler(self):
@@ -49,6 +45,10 @@ class Birthday(cmd.Cog):
             print("BIRTHDAY_COG: New day !")
             await self.config.date.set(d2)
             await self.update_birthday()
+
+    @scheduler.before_loop
+    async def before_scheduler(self):
+        await self.bot.wait_until_ready()
 
     async def update_birthday(self):
         guilds = await self.config.all_guilds()
@@ -68,20 +68,19 @@ class Birthday(cmd.Cog):
                 user['id'] for user in birthdays if user['present']\
                                                     and date == user['date']
             ]
-
             for user in birthdays:
                 user = guild.get_member(user)
                 message = ":tada: Happy birthday {.mention}!!! :cake:".format(user)
 
-                await channel.send(message)
+                #await channel.send(message)
             
             if role:
                 for member in guild.members:
                     roles = member.roles
                     if member.id in birthdays and role not in roles:
-                        member.add_roles(role)
+                        await member.add_roles(role)
                     elif member.id not in birthdays and role in roles:
-                        member.remove_roles(role)
+                        await member.remove_roles(role)
 
     @cmd.group(name='birthday')
     async def birthday_group(self, ctx: cmd.Context):
