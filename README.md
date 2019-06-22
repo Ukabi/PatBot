@@ -31,6 +31,7 @@ The current cogs provided are:
 - EmojiData: Gets the emoji usage and provides statistics for guild or member. 
 - Poll: Create a multiple choice poll using Discord reactions.
 - Rolegive: Give members roles when reacting to a message.
+- Scheduler: Reminds user the task they submited after a certain amount of time.
 - Welcome: Send a custom welcome message to new member.
 
 # Support
